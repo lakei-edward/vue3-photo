@@ -1,6 +1,9 @@
 <template>
   <div id="header">
-    <div class="top flex a-c" @mouseenter="handleHeaderShow">
+    <div
+      :class="['animate__animated top flex a-c', animate]"
+      @mouseenter="handleHeaderShow"
+    >
       <div v-if="isShow">
         <h1>我的相册</h1>
         <div class="top-item flex j-c a-c">
@@ -28,7 +31,9 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref, defineProps } from "vue";
+import { ref, defineProps, defineEmits } from "vue";
+
+const emit = defineEmits(["catalogueClick"]);
 
 const DEFAULT_COUNT = 7;
 
@@ -48,16 +53,19 @@ const current = ref(0);
 const title = ref("全部");
 /* 是否展示详情 */
 const isShow = ref(true);
+const animate = ref("");
 
 const handleHeaderShow = () => {
-  console.log(123);
-  isShow.value = false;
+  // animate.value = "animate__zoomOut";
+  // isShow.value = false;
 };
 
 /* 切换目录 */
 const switchCatalogue = (item: album, index: number) => {
   title.value = item.name;
+  console.log(title.value);
   current.value = index;
+  emit("catalogueClick", index);
 };
 
 const setAllStyle = () => {
@@ -79,10 +87,11 @@ const setBackImage = (url: string) => {
 <style lang="scss" scoped>
 #header {
   width: 100%;
-  height: 100%;
+  height: 16%;
+  min-height: 70px;
 }
 .top {
-  height: 16%;
+  height: 100%;
   min-height: 70px;
   padding: 0 8%;
   position: relative;
