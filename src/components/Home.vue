@@ -5,23 +5,26 @@
         :catalogueList="catalogueList"
         @catalogueClick="catalogueClick"
       ></Header>
+      <div ref="element"></div>
       <div class="show" id="scrollShow">
+        <div style="height: 130px"></div>
         <div class="video">
           <h3 class="flex a-c">
-            <img style="width: 24px" src="@/assets/video.svg" alt="" /> 视频
+            <img style="width: 24px" src="@/assets/svgs/video.svg" alt="" />
+            视频
           </h3>
           <div class="flex flex-w j-sb">
             <div
               :class="[
                 'v-item item flex a-c j-c',
-                item.id === imageId ? 'to-up' : '',
+                item.id === currentId ? 'to-up' : '',
               ]"
               v-for="item in videoList"
               :key="item.id"
-              @mouseenter="handleImageEnter(item.id)"
-              @mouseleave="imageId = ''"
+              @mouseenter.stop="handleEnter(item.id)"
+              @mouseleave.stop="currentId = ''"
             >
-              <div v-show="item.id === imageId" class="flex-col a-c j-c">
+              <div v-show="item.id === currentId" class="flex-col a-c j-c">
                 <img src="@/assets/images/search.png" alt="" />
                 <span>观看</span>
               </div>
@@ -35,17 +38,18 @@
         </div>
         <div class="photo">
           <h3 class="flex a-c">
-            <img style="width: 26px" src="@/assets/photo.svg" alt="" /> 照片
+            <img style="width: 26px" src="@/assets/svgs/photo.svg" alt="" />
+            照片
           </h3>
           <div class="flex flex-w j-sb">
             <div
-              :class="['p-item item', item.id === imageId ? 'to-up' : '']"
+              :class="['p-item item', item.id === currentId ? 'to-up' : '']"
               v-for="item in imageList"
               :key="item.id"
-              @mouseenter="handleImageEnter(item.id)"
-              @mouseleave="imageId = ''"
+              @mouseenter="handleEnter(item.id)"
+              @mouseleave="currentId = ''"
             >
-              <div v-show="item.id === imageId" class="flex-col a-c j-c">
+              <div v-show="item.id === currentId" class="flex-col a-c j-c">
                 <img src="@/assets/images/search.png" alt="" />
                 <span>查看素材</span>
               </div>
@@ -60,7 +64,7 @@
         </div>
       </div>
       <div class="go-top">
-        <img src="@/assets/top.svg" alt="" @click="goTop" />
+        <img src="@/assets/svgs/top.svg" alt="" @click="goTop" />
       </div>
       <div class="custom-scrollbar" id="customScrollbar">
         <div class="scroll-thumb" id="scrollThumb"></div>
@@ -70,33 +74,39 @@
 </template>
 
 <script setup lang="ts">
-import Header from "./Header.vue";
+import Header from "./children/Header.vue";
 import { ref, onMounted, nextTick } from "vue";
+import { Iamge, Video, Album } from "@/delcare/index";
 
-const showRef = ref();
-
+/* 目录 */
 let catalogueList = ref([]);
+/* 视频 */
 let videoList = ref([]);
+/* 图片 */
 let imageList = ref([]);
-let imageId = ref("");
+/* 是否显示 */
+let currentId = ref("");
+
+let element = ref();
+
+/* 滚动条参数 */
+let scrollShow: HTMLDivElement | null = null;
+let scrollThumb: HTMLDivElement | null = null;
+let scrollHeight = 0;
 
 /* 页面加载生命周期 */
 onMounted(() => {
+  console.log(element.value);
   getCatlogs();
 });
 
 /* 格式化分秒 */
-const secondsToMinutesAndSeconds = (seconds) => {
+const secondsToMinutesAndSeconds = (seconds: number) => {
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
   const formattedMinutes = String(minutes).padStart(2, "0");
   const formattedSeconds = String(remainingSeconds).padStart(2, "0");
   return `${formattedMinutes}:${formattedSeconds}`;
-};
-
-/* 切换目录 */
-const catalogueClick = (index: number) => {
-  handleImageOrVideo(index);
 };
 
 // 回到顶部
@@ -122,17 +132,22 @@ const goTop = () => {
 };
 
 /* 查看的动画 */
-const handleImageEnter = (id: string) => {
-  imageId.value = id;
+const handleEnter = (id: string) => {
+  currentId.value = id;
 };
 
 /* 获取目录 */
 const getCatlogs = async () => {
-  const response = await fetch(
+  catalogueList.value = await fetch(
     `https://general.feicut.com/resource/project.json`
-  );
-  catalogueList.value = await response.json();
+  ).then((r) => r.json());
   handleImageOrVideo(0);
+};
+
+/* 切换目录 */
+const catalogueClick = (index: number) => {
+  handleImageOrVideo(index);
+  (scrollShow as HTMLDivElement).scrollTo(0, 0);
 };
 
 /* 处理视频和照片数据 */
@@ -143,27 +158,31 @@ const handleImageOrVideo = async (index: number) => {
   imageList.value = handleSortDate(imageList.value, "uploadTime");
   await nextTick();
   // 设置自定义滚动条
-  updateScrollbar();
+  initThumb();
 };
 
 /* 处理排序 */
-const handleSortDate = (list: object, type: string) => {
+const handleSortDate = (list: Array<object>, type: string) => {
   return list.sort((v: object, b: object) => {
     const timeA = new Date(v[type]);
     const timeB = new Date(b[type]);
+    // @ts-ignore
     return timeB - timeA;
   });
 };
 
-/* 设置自定义滚动条 */
-const updateScrollbar = () => {
-  const scrollShow: HTMLElement = document.getElementById("scrollShow");
-  const scrollThumb: HTMLElement = document.getElementById("scrollThumb");
-  const customScrollbar: HTMLElement =
-    document.getElementById("customScrollbar");
-  const customHeight = customScrollbar.clientHeight;
+const initThumb = () => {
   // 全部内容高度
-  const scrollHeight = scrollShow.scrollHeight;
+  scrollShow = document.getElementById("scrollShow") as HTMLDivElement;
+  scrollHeight = scrollShow.scrollHeight;
+
+  scrollThumb = document.getElementById("scrollThumb") as HTMLDivElement;
+  const customScrollbar = document.getElementById(
+    "customScrollbar"
+  ) as HTMLDivElement;
+
+  // 自定义滚动条框的高
+  const customHeight = customScrollbar.clientHeight;
   // 显示内容高度
   const containerHeight = scrollShow.clientHeight;
   // 显示内容高度 / 全部内容高度
@@ -171,11 +190,18 @@ const updateScrollbar = () => {
   const scrollbarHeight = customHeight * scrollbarRatio;
   // 设置滚动条高度
   scrollThumb.style.height = scrollbarHeight + "px";
+  scrollThumb.style.top = "0%";
+  // 监听滚动
+  updateScrollbar();
+};
+
+/* 设置自定义滚动条 */
+const updateScrollbar = () => {
   // 根据滚动获取总高占比
-  let distance = scrollShow.scrollTop / scrollHeight;
+  let distance = (scrollShow as HTMLDivElement).scrollTop / scrollHeight;
   // 设置滚动条距离顶部距离
-  scrollThumb.style.top = distance * 100 + "%";
-  scrollShow.addEventListener("scroll", updateScrollbar);
+  (scrollThumb as HTMLDivElement).style.top = distance * 100 + "%";
+  (scrollShow as HTMLDivElement).addEventListener("scroll", updateScrollbar);
 };
 </script>
 
@@ -189,6 +215,7 @@ const updateScrollbar = () => {
   display: flex;
   justify-content: center;
   align-items: center;
+  position: relative;
   .con {
     width: 85%;
     height: 90%;
@@ -197,20 +224,11 @@ const updateScrollbar = () => {
     backdrop-filter: blur(100px);
   }
   .show {
-    height: 74%;
+    height: calc(100% - 6px);
     overflow: auto;
-    padding: 20px 8%;
+    padding: 2px 8%;
     &::-webkit-scrollbar {
-      width: 5px; // y轴的宽度
-      height: 8px; //x轴的高度 可删除
-    }
-    &::-webkit-scrollbar-thumb {
-      background-color: #fff;
-      border-radius: 5px;
-    }
-    &::-webkit-scrollbar-track {
-      //轨道要设置成透明的
-      background-color: transparent;
+      width: 0px; // y轴的宽度
     }
   }
   .v-item {

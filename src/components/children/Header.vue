@@ -1,10 +1,11 @@
 <template>
   <div id="header">
     <div
-      :class="['animate__animated top flex a-c', animate]"
+      :class="['top flex a-c']"
+      @mouseleave="leaveTopInfo"
       @mouseenter="handleHeaderShow"
     >
-      <div v-if="isShow">
+      <div v-show="isShow">
         <h1>我的相册</h1>
         <div class="top-item flex j-c a-c">
           <div :class="['flex a-c j-c show-active', 'outer']">
@@ -25,54 +26,56 @@
           </div>
           <div class="more flex j-c a-c">···</div>
         </div>
-        <div class="photo-title">全部</div>
+        <div class="photo-title"></div>
+      </div>
+      <div v-show="!isShow">
+        <div class="in-all flex-col a-c j-c" :style="setAllStyle()">
+          <div class="in-all-title flex a-c j-c">
+            <img src="@/assets/images/all-icon.png" alt="" />
+            全部
+          </div>
+          <img src="@/assets/images/current.png" alt="" />
+        </div>
       </div>
     </div>
   </div>
 </template>
 <script setup lang="ts">
 import { ref, defineProps, defineEmits } from "vue";
-
+import { Album } from "@/delcare/index";
+/* 接受参数 */
+defineProps(["catalogueList"]);
+/* 注册事件 */
 const emit = defineEmits(["catalogueClick"]);
 
 const DEFAULT_COUNT = 7;
-
-interface album {
-  name: string;
-  id: string;
-  poster: string;
-  imageList: Array<any>;
-  videoList: Array<any>;
-}
-
-/* 接受参数 */
-defineProps(["catalogueList"]);
 
 const current = ref(0);
 /* 相册的标题 */
 const title = ref("全部");
 /* 是否展示详情 */
 const isShow = ref(true);
-const animate = ref("");
 
 const handleHeaderShow = () => {
-  // animate.value = "animate__zoomOut";
   // isShow.value = false;
 };
 
+const leaveTopInfo = () => {
+  // isShow.value = true;
+};
+
 /* 切换目录 */
-const switchCatalogue = (item: album, index: number) => {
+const switchCatalogue = (item: Album, index: number) => {
   title.value = item.name;
-  console.log(title.value);
   current.value = index;
   emit("catalogueClick", index);
 };
 
 const setAllStyle = () => {
-  return setBackImage("../assets/images/all.png");
+  return setBackImage("../../assets/images/bg.png");
 };
 
-const setBackStyle = (item: album) => {
+const setBackStyle = (item: Album) => {
   return setBackImage(item.poster);
 };
 
@@ -86,9 +89,40 @@ const setBackImage = (url: string) => {
 </script>
 <style lang="scss" scoped>
 #header {
+  position: fixed;
+  z-index: 100;
+  top: 0;
+  left: 0;
   width: 100%;
-  height: 16%;
+  height: 130px;
   min-height: 70px;
+  border-radius: 40px 40px 0px 0px;
+  transition: all 0.3s;
+  background: linear-gradient(
+    90deg,
+    rgba(252, 252, 252, 0.1) 0%,
+    rgba(241, 237, 232, 0.95) 10%,
+    rgba(241, 237, 232, 0.95) 90%,
+    rgba(252, 252, 252, 0.1) 100%
+  );
+  &:hover {
+    height: 230px;
+    // transform: scale(2);
+  }
+}
+.in-all {
+  width: 192px;
+  height: 108px;
+  color: #fff;
+  font-size: 12px;
+  border-radius: 8px;
+  .in-all-title {
+    margin-bottom: 5px;
+    margin-top: 50px;
+  }
+  img {
+    margin: 0 5px;
+  }
 }
 .top {
   height: 100%;
@@ -97,14 +131,6 @@ const setBackImage = (url: string) => {
   position: relative;
   border-radius: 40px 40px 0px 0px;
   backdrop-filter: blur(100px);
-  background: linear-gradient(
-    90deg,
-    rgba(252, 252, 252, 0.01) 0%,
-    rgba(252, 252, 252, 0.8) 24%,
-    rgba(252, 252, 252, 0.8) 50%,
-    rgba(252, 252, 252, 0.8) 75%,
-    rgba(252, 252, 252, 0.01) 100%
-  );
 }
 .photo-title {
   position: absolute;
@@ -131,7 +157,6 @@ const setBackImage = (url: string) => {
     height: 36px;
     font-size: 12px;
     border-radius: 8px;
-    background: rgba(255, 255, 255, 0.059);
     border: 1px solid rgba(0, 0, 0, 0.1608);
     padding: 5px;
     box-sizing: border-box;

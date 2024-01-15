@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import MyPhoto from "@/components/MyPhoto.vue";
+import Home from "@/components/Home.vue";
 </script>
 
 <template>
-  <MyPhoto />
+  <Home />
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>
