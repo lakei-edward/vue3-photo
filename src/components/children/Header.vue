@@ -57,11 +57,11 @@ const title = ref("全部");
 const isShow = ref(true);
 
 const handleHeaderShow = () => {
-  // isShow.value = false;
+  isShow.value = false;
 };
 
 const leaveTopInfo = () => {
-  // isShow.value = true;
+  isShow.value = true;
 };
 
 /* 切换目录 */
@@ -107,7 +107,6 @@ const setBackImage = (url: string) => {
   );
   &:hover {
     height: 230px;
-    // transform: scale(2);
   }
 }
 .in-all {

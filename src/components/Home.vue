@@ -13,7 +13,7 @@
             <img style="width: 24px" src="@/assets/svgs/video.svg" alt="" />
             视频
           </h3>
-          <div class="flex flex-w j-sb">
+          <div class="layout-item">
             <div
               :class="[
                 'v-item item flex a-c j-c',
@@ -216,6 +216,7 @@ const updateScrollbar = () => {
   justify-content: center;
   align-items: center;
   position: relative;
+
   .con {
     width: 85%;
     height: 90%;
@@ -231,21 +232,23 @@ const updateScrollbar = () => {
       width: 0px; // y轴的宽度
     }
   }
+  .layout-item {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* 自适应 */
+    grid-gap: 3rem;
+    justify-content: space-between;
+  }
   .v-item {
-    width: 280px;
     height: 160px;
-    margin-right: 20px;
-    margin-bottom: 20px;
     border-radius: 16px;
     color: #fff;
-    & > div:first-child {
-      border-radius: 16px;
-      width: 280px;
-      height: 160px;
-      background: rgba(0, 0, 0, 0.4);
-      position: absolute;
-      color: #fff;
-      cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    &:hover {
+      // background: rgba(0, 0, 0, 0.4);
+      opacity: 0.6;
+      // filter: alpha(opacity=60);
     }
     .info {
       position: absolute;
